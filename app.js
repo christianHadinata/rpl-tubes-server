@@ -33,8 +33,10 @@ app.use(cors());
 // Middleware import
 
 // Routes import
+import userRoute from "./routes/user.js";
 
 // Routes
+app.use("/api", userRoute);
 
 //Error handling
 app.use(errorHandler);
