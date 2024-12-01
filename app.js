@@ -34,9 +34,11 @@ app.use(cors());
 
 // Routes import
 import userRoute from "./routes/user.js";
+import sidangRoute from "./routes/sidang.js";
 
 // Routes
 app.use("/api", userRoute);
+app.use("/api/sidang", sidangRoute);
 
 //Error handling
 app.use(errorHandler);
