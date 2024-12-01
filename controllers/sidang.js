@@ -1,7 +1,10 @@
-export const getListUserSidangAll = async (req, res) => {
-  const { email, role } = req.body;
+import pool from "../db/db.js";
 
-  const textQuery = `
+export const getListUserSidangAll = async (req, res) => {
+  const { email, role } = req.query;
+  console.log(email, role);
+
+  let textQuery = `
   SELECT 
     s.idSidang,
     s.judulSkripsi,
@@ -33,14 +36,13 @@ JOIN
   } else {
     textQuery += `
     WHERE 
-      p_dosen.email = $1
-      AND pms_mahasiswa.role = 'Mahasiswa'
+    p_dosen.email = $1
+    AND pms_mahasiswa.role = 'Mahasiswa'
     ORDER BY 
-      s.idSidang `;
+    s.idSidang `;
   }
 
   const values = [email];
-  const queryResult = await pool.query(textQuery, values);
 
   return res.status(200).json(queryResult.rows);
 };
