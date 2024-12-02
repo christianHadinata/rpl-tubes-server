@@ -6,13 +6,13 @@ export const getListUserSidangAll = async (req, res) => {
 
   let textQuery = `
   SELECT 
-    s.idSidang,
-    s.judulSkripsi,
-    s.TA,
-    m.nama AS namaMahasiswa,
-    mhs.npm,
-    p_dosen.email AS emailDosen,
-    pms_dosen.role AS roleDosen
+    s.idSidang AS "idSidang",
+    s.judulSkripsi AS "judulSkripsi",
+    s.TA AS "TA",
+    m.nama AS "namaMahasiswa",
+    mhs.npm AS "npm",
+    p_dosen.email AS "emailDosen",
+    pms_dosen.role AS "roleDosen"
 FROM 
     Sidang s
 JOIN 
@@ -43,6 +43,10 @@ JOIN
   }
 
   const values = [email];
+
+  const queryResult = await pool.query(textQuery, values);
+  console.log(queryResult);
+  console.log("Hello");
 
   return res.status(200).json(queryResult.rows);
 };
