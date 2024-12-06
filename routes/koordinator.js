@@ -1,12 +1,12 @@
 import express from "express";
 import {
   createDataSidang,
-  getMahasiswaNotHaveSidang,
+  getAllMahasiswa,
 } from "../controllers/koordinator.js";
 
 const router = express.Router();
 
-router.get("/mahasiswa-belum-sidang", getMahasiswaNotHaveSidang);
+router.get("/all-mahasiswa", getAllMahasiswa);
 router.post("/tambah-data-sidang", createDataSidang);
 
 export default router;
