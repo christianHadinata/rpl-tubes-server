@@ -1,23 +1,17 @@
 import pool from "../db/db.js";
 import { InternalServerError } from "../errors/InternalServerError.js";
 
-export const getMahasiswaNotHaveSidang = async (req, res) => {
+export const getAllMahasiswa = async (req, res) => {
   const textQuery = `SELECT 
         p.nama AS "namaMahasiswa", 
         m.email AS "emailMahasiswa", 
         m.npm AS "npmMahasiswa" 
     FROM 
-        Mahasiswa m 
-    INNER JOIN 
-        Pengguna p 
-    ON 
-        m.email = p.email
-    LEFT JOIN 
-        PenggunaMengikutiSidang pms 
-    ON 
-        m.email = pms.email 
-    WHERE 
-        pms.idSidang IS null`;
+        Pengguna p
+    INNER JOIN
+        Mahasiswa m
+    ON
+        p.email = m.email`;
 
   const queryResult = await pool.query(textQuery);
 
@@ -141,3 +135,26 @@ export const createDataSidang = async (req, res) => {
     client.release();
   }
 };
+
+// export const getMahasiswaNotHaveSidang = async (req, res) => {
+//   const textQuery = `SELECT
+//         p.nama AS "namaMahasiswa",
+//         m.email AS "emailMahasiswa",
+//         m.npm AS "npmMahasiswa"
+//     FROM
+//         Mahasiswa m
+//     INNER JOIN
+//         Pengguna p
+//     ON
+//         m.email = p.email
+//     LEFT JOIN
+//         PenggunaMengikutiSidang pms
+//     ON
+//         m.email = pms.email
+//     WHERE
+//         pms.idSidang IS null`;
+
+//   const queryResult = await pool.query(textQuery);
+
+//   return res.status(200).json(queryResult.rows);
+// };
