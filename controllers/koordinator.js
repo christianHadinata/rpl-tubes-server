@@ -94,7 +94,7 @@ export const createDataSidang = async (req, res) => {
     penggunaMengikutiSidangValues = [
       emailPengujiUtama,
       idSidang,
-      "Penguji Utama",
+      "Ketua Tim Penguji",
     ];
     await client.query(
       penggunaMengikutiSidangQuery,
@@ -105,7 +105,7 @@ export const createDataSidang = async (req, res) => {
     penggunaMengikutiSidangValues = [
       emailPengujiPendamping,
       idSidang,
-      "Penguji Pendamping",
+      "Anggota Tim Penguji",
     ];
     await client.query(
       penggunaMengikutiSidangQuery,
@@ -123,6 +123,93 @@ export const createDataSidang = async (req, res) => {
       penggunaMengikutiSidangQuery,
       penggunaMengikutiSidangValues
     );
+
+    await client.query("COMMIT");
+    return res.json({ success: true });
+  } catch (error) {
+    console.log(error);
+    await client.query("ROLLBACK");
+
+    throw new InternalServerError("An unexpected error occurred");
+  } finally {
+    client.release();
+  }
+};
+
+export const getKomponenDanBobot = async (req, res) => {
+  const textQuery = `
+    SELECT 
+    pn.role,
+    CAST(COUNT(kn.idKomponen) AS INT) AS jumlahKomponen,
+    pn.persentase
+FROM 
+    PersentaseNilai pn
+LEFT JOIN 
+    KomponenNilai kn
+ON 
+    pn.role = kn.role
+GROUP BY 
+    pn.role, pn.persentase`;
+
+  const queryResult = await pool.query(textQuery);
+
+  return res.status(200).json(queryResult.rows);
+};
+
+export const createKomponenDanBobot = async (req, res) => {
+  const {
+    selectedRole,
+    banyakKomponen,
+    persentaseNilai,
+    arrNamaKomponen,
+    arrBobotKomponen,
+  } = req.body;
+
+  console.log({
+    selectedRole,
+    banyakKomponen,
+    persentaseNilai,
+    arrNamaKomponen,
+    arrBobotKomponen,
+  });
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // update dulu persentase di tabel PersentaseNilai
+    const textQueryPersentase = `
+    UPDATE
+      PersentaseNilai pn
+    SET
+      persentase = $1
+    WHERE
+      pn.role = $2
+    `;
+
+    const valuesPersentase = [persentaseNilai, selectedRole];
+
+    await client.query(textQueryPersentase, valuesPersentase);
+
+    // Masukin ke tabel KomponenNilai
+
+    const textQueryKomponenNilai = `
+    INSERT INTO
+      KomponenNilai(namaKomponen, role, bobot)
+    VALUES
+      ($1, $2, $3)
+    `;
+
+    for (let i = 0; i < banyakKomponen; i++) {
+      const valuesKomponenNilai = [
+        arrNamaKomponen[i],
+        selectedRole,
+        arrBobotKomponen[i],
+      ];
+
+      await client.query(textQueryKomponenNilai, valuesKomponenNilai);
+    }
 
     await client.query("COMMIT");
     return res.json({ success: true });
