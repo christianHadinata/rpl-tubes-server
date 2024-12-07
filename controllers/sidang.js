@@ -65,3 +65,22 @@ export const getListUserSidangAll = async (req, res) => {
 
   return res.status(200).json(queryResult.rows);
 };
+
+export const getSingleSidang = async (req, res) => {
+  const { idSidang } = req.query;
+  const textQuery = `
+  SELECT
+    CAST(idSidang AS INT) AS "idSidang",
+    judulSkripsi AS "judulSkripsi"
+  FROM
+    Sidang
+  WHERE
+    idSidang = $1
+  `;
+
+  const values = [idSidang];
+
+  const queryResult = await pool.query(textQuery, values);
+
+  return res.status(200).json(queryResult.rows[0]);
+};
