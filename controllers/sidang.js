@@ -69,13 +69,69 @@ export const getListUserSidangAll = async (req, res) => {
 export const getSingleSidang = async (req, res) => {
   const { idSidang } = req.query;
   const textQuery = `
-  SELECT
-    CAST(idSidang AS INT) AS "idSidang",
-    judulSkripsi AS "judulSkripsi"
-  FROM
-    Sidang
-  WHERE
-    idSidang = $1
+  SELECT 
+      CAST(s.idSidang AS INT) AS "idSidang",
+      s.judulSkripsi AS "judulSkripsi",
+      mhs.nama AS "namaMahasiswa",
+      m.npm,
+      pembimbing_utama.nama AS "namaPembimbingUtama",
+      pembimbing_pendamping.nama AS "namaPembimbingPendamping",
+      ketua_penguji.nama AS "namaKetuaTimPenguji",
+      anggota_penguji.nama AS "namaAnggotaTimPenguji",
+      s.TA,
+      s.tahunAjaran AS "tahunAjaran",
+      s.tanggal,
+      s.jamMulai AS "jamMulai",
+      s.tempat
+	
+  FROM 
+      Sidang s
+  LEFT JOIN 
+      PenggunaMengikutiSidang pms_mhs 
+  ON 
+      s.idSidang = pms_mhs.idSidang AND pms_mhs.role = 'Mahasiswa'
+  LEFT JOIN 
+      Pengguna mhs 
+  ON 
+      pms_mhs.email = mhs.email
+  LEFT JOIN 
+      Mahasiswa m 
+  ON 
+      mhs.email = m.email
+  LEFT JOIN 
+      PenggunaMengikutiSidang pms_pembimbing_utama 
+  ON 
+      s.idSidang = pms_pembimbing_utama.idSidang AND pms_pembimbing_utama.role = 'Pembimbing Utama'
+  LEFT JOIN 
+      Pengguna pembimbing_utama 
+  ON 
+      pms_pembimbing_utama.email = pembimbing_utama.email
+  LEFT JOIN 
+      PenggunaMengikutiSidang pms_pembimbing_pendamping 
+  ON 
+      s.idSidang = pms_pembimbing_pendamping.idSidang AND pms_pembimbing_pendamping.role = 'Pembimbing Pendamping'
+  LEFT JOIN 
+      Pengguna pembimbing_pendamping 
+  ON 
+      pms_pembimbing_pendamping.email = pembimbing_pendamping.email
+  LEFT JOIN 
+      PenggunaMengikutiSidang pms_ketua_penguji 
+  ON 
+      s.idSidang = pms_ketua_penguji.idSidang AND pms_ketua_penguji.role = 'Ketua Tim Penguji'
+  LEFT JOIN 
+      Pengguna ketua_penguji 
+  ON 
+      pms_ketua_penguji.email = ketua_penguji.email
+  LEFT JOIN 
+      PenggunaMengikutiSidang pms_anggota_penguji 
+  ON 
+      s.idSidang = pms_anggota_penguji.idSidang AND pms_anggota_penguji.role = 'Anggota Tim Penguji'
+  LEFT JOIN 
+      Pengguna anggota_penguji 
+  ON 
+      pms_anggota_penguji.email = anggota_penguji.email
+  WHERE 
+      s.idSidang = $1;
   `;
 
   const values = [idSidang];
@@ -83,4 +139,49 @@ export const getSingleSidang = async (req, res) => {
   const queryResult = await pool.query(textQuery, values);
 
   return res.status(200).json(queryResult.rows[0]);
+};
+
+export const getCatatanSidang = async (req, res) => {
+  const { idSidang } = req.query;
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryGetCatatanSidang = `
+  SELECT
+      isiCatatan AS "isiCatatan"
+  FROM
+      Sidang
+  WHERE
+      idSidang = $1;
+  `;
+
+  const valuesGetCatatanSidang = [idSidangInt];
+  const queryResult = await pool.query(
+    textQueryGetCatatanSidang,
+    valuesGetCatatanSidang
+  );
+
+  return res.status(200).json(queryResult.rows[0].isiCatatan);
+};
+
+export const updateCatatanSidang = async (req, res) => {
+  const { isiCatatan, idSidang } = req.body;
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryUpdateCatatanSidang = `
+  UPDATE
+      Sidang
+  SET
+      isiCatatan = $1
+  WHERE
+      idSidang = $2
+  `;
+
+  const valuesUpdateCatatanSidang = [isiCatatan, idSidangInt];
+
+  const queryResult = await pool.query(
+    textQueryUpdateCatatanSidang,
+    valuesUpdateCatatanSidang
+  );
+
+  return res.status(200).json(queryResult.rows);
 };
