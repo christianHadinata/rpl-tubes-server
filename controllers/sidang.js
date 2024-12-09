@@ -80,8 +80,9 @@ export const getSingleSidang = async (req, res) => {
       anggota_penguji.nama AS "namaAnggotaTimPenguji",
       s.TA,
       s.tahunAjaran AS "tahunAjaran",
-      s.tanggal,
+      TO_CHAR(s.tanggal, 'YYYY-MM-DD') AS "tanggal",
       s.jamMulai AS "jamMulai",
+      s.jamSelesai AS "jamSelesai",
       s.tempat
 	
   FROM 
@@ -181,6 +182,70 @@ export const updateCatatanSidang = async (req, res) => {
   const queryResult = await pool.query(
     textQueryUpdateCatatanSidang,
     valuesUpdateCatatanSidang
+  );
+
+  return res.status(200).json(queryResult.rows);
+};
+
+export const updateJadwalDanTempatSidang = async (req, res) => {
+  const { tanggal, tempat, jamMulai, jamSelesai, idSidang } = req.body;
+
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryUpdateJadwalDanTempatSidang = `
+  UPDATE
+      Sidang
+  SET
+      tanggal = $1,
+      tempat = $2,
+      jamMulai = $3,
+      jamSelesai = $4
+  WHERE
+      idSidang = $5;
+  `;
+
+  const valuesUpdateJadwalDanTempatSidang = [
+    tanggal,
+    tempat,
+    jamMulai,
+    jamSelesai,
+    idSidangInt,
+  ];
+
+  await pool.query(
+    textQueryUpdateJadwalDanTempatSidang,
+    valuesUpdateJadwalDanTempatSidang
+  );
+
+  return res.json({ success: true });
+};
+
+export const getAllKomponenRole = async (req, res) => {
+  const { roleDosen, idSidang } = req.query;
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryAllKomponenRole = `
+  SELECT
+      CAST(kn.idKomponen AS INT) AS "idKomponen",
+      kn.namaKomponen AS "namaKomponen",
+      kn.role AS "role",
+      CAST(kn.bobot AS FLOAT) AS "bobot",
+      CAST(n.nilaiDiberi AS FLOAT) AS "nilai"
+  FROM
+      KomponenNilai kn
+  LEFT JOIN 
+      Nilai n 
+  ON 
+      kn.idKomponen = n.idKomponen AND n.idSidang = $1
+  WHERE
+      kn.role = $2 AND kn.isActive = TRUE;
+  `;
+
+  const valuesAllKomponenRole = [idSidangInt, roleDosen];
+
+  const queryResult = await pool.query(
+    textQueryAllKomponenRole,
+    valuesAllKomponenRole
   );
 
   return res.status(200).json(queryResult.rows);
