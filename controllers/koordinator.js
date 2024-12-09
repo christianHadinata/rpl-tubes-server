@@ -253,7 +253,7 @@ export const createNilai = async (req, res) => {
   FROM
       KomponenNilai kn
   WHERE
-      kn.role = 'Koordinator';
+      kn.role = 'Koordinator' AND isActive = TRUE;
   `;
   const queryResultKomponen = await pool.query(textQueryGetKomponen);
   const idKomponen = queryResultKomponen.rows[0].idKomponen;
@@ -275,8 +275,7 @@ export const createNilai = async (req, res) => {
     valuesGetNilai
   );
 
-  const isNilaiExist =
-    queryResultGetNilai.rows[0].idKomponen != undefined ? true : false;
+  const isNilaiExist = queryResultGetNilai.rows.length !== 0 ? true : false;
 
   console.log("Nilai exist:");
   console.log(isNilaiExist);
@@ -307,10 +306,10 @@ export const createNilai = async (req, res) => {
       ON 
           Nilai.idKomponen = KomponenNilai.idKomponen
       WHERE
-          Nilai.idKomponen = $1;
+          Nilai.idKomponen = $1 AND Nilai.idSidang = $2;
       `;
 
-      const valuesGetNilai = [idKomponen];
+      const valuesGetNilai = [idKomponen, idSidangInt];
 
       const queryResultGetNilai = await client.query(
         textQueryGetNilai,
@@ -383,10 +382,10 @@ export const createNilai = async (req, res) => {
       ON 
           Nilai.idKomponen = KomponenNilai.idKomponen
       WHERE
-          Nilai.idKomponen = $1;
+          Nilai.idKomponen = $1 AND Nilai.idSidang = $2;
       `;
 
-      const valuesGetNilai = [idKomponen];
+      const valuesGetNilai = [idKomponen, idSidangInt];
 
       const queryResultGetNilai = await client.query(
         textQueryGetNilai,
