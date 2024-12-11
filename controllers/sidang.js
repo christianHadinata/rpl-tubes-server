@@ -250,3 +250,70 @@ export const getAllKomponenRole = async (req, res) => {
 
   return res.status(200).json(queryResult.rows);
 };
+
+export const getBAPSidang = async (req, res) => {
+  const { idSidang } = req.query;
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryGetBAPSidang = `
+  SELECT
+      role,
+      CAST (nilai AS FLOAT),
+      CAST(persentase AS INT),
+      CAST (nilaiAkhir AS FLOAT) AS "nilaiAkhir"
+  FROM
+      NilaiDiBAP
+  WHERE
+      idSidang = $1
+  `;
+
+  const valuesQueryGetBAPSidang = [idSidangInt];
+
+  const queryResult = await pool.query(
+    textQueryGetBAPSidang,
+    valuesQueryGetBAPSidang
+  );
+
+  return res.status(200).json(queryResult.rows);
+};
+
+export const createTTDBAP = async (req, res) => {
+  const { idSidang, role } = req.body;
+
+  const textQueryCreateTTD = `
+  INSERT INTO 
+      TTD (idSidang, role, pathGambarTTD) 
+  VALUES 
+      ($1, $2, $3)`;
+  const valuesQueryCreateTTD = [idSidang, role, req.file.filename];
+
+  await pool.query(textQueryCreateTTD, valuesQueryCreateTTD);
+
+  return res.status(200).json({ success: true });
+};
+
+export const getTTDBAP = async (req, res) => {
+  const { idSidang } = req.query;
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryGetTTDBAPSidang = `
+  SELECT
+      CAST (idSidang AS INT) AS "idTTD",
+      CAST (idSidang AS INT) AS "idSidang",
+      role,
+      pathGambarTTD AS "pathGambarTTD"
+  FROM
+      TTD
+  WHERE
+      idSidang = $1
+  `;
+
+  const valuesQueryGetTTDBAPSidang = [idSidangInt];
+
+  const queryResult = await pool.query(
+    textQueryGetTTDBAPSidang,
+    valuesQueryGetTTDBAPSidang
+  );
+
+  return res.status(200).json(queryResult.rows);
+};
