@@ -5,6 +5,11 @@ const app = express();
 // Morgan
 import morgan from "morgan";
 
+// Cors
+import cors from "cors";
+//Setting up cors
+app.use(cors());
+
 // Serve static from public folder
 app.use(express.static("public"));
 
@@ -18,9 +23,6 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Cors
-import cors from "cors";
-
 // Model import
 import cookieParser from "cookie-parser";
 
@@ -29,9 +31,6 @@ app.use(cookieParser());
 
 // Parse json
 app.use(express.json());
-
-//Setting up cors
-app.use(cors());
 
 // Morgan
 app.use(morgan("dev"));
@@ -43,12 +42,14 @@ import userRoute from "./routes/user.js";
 import sidangRoute from "./routes/sidang.js";
 import koordinatorRoute from "./routes/koordinator.js";
 import dosenRoute from "./routes/dosen.js";
+import mahasiswaRoute from "./routes/mahasiswa.js";
 
 // Routes
 app.use("/api", userRoute);
 app.use("/api/sidang", sidangRoute);
 app.use("/api/koordinator", koordinatorRoute);
 app.use("/api/dosen", dosenRoute);
+app.use("/api/mahasiswa", mahasiswaRoute);
 
 //Error handling
 app.use(errorHandler);

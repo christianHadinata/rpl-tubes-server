@@ -25,10 +25,15 @@ export const createDataSidang = async (req, res) => {
     TA,
     tahunAjaran,
     emailPembimbingUtama,
-    emailPembimbingPendamping,
     emailPengujiUtama,
     emailPengujiPendamping,
   } = req.body;
+
+  let { emailPembimbingPendamping } = req.body;
+
+  if (emailPembimbingPendamping === "") {
+    emailPembimbingPendamping = "-";
+  }
 
   const client = await pool.connect();
 
