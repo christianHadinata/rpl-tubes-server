@@ -18,7 +18,7 @@ export const register = async (req, res) => {
   const values = [email, nama, hashedPassword, role];
   await pool.query(textQuery, values);
 
-  if (npm != null) {
+  if (npm) {
     const textQuery = `INSERT INTO Mahasiswa (email, npm) VALUES ($1, $2)`;
     const values = [email, npm];
     await pool.query(textQuery, values);
@@ -31,7 +31,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    throw new BadRequestError("All specified field must be included");
+    throw new BadRequestError("Semua Field Harus Diisi!");
   }
 
   const textQuery = `SELECT email, nama, password, role FROM Pengguna WHERE email = $1`;
@@ -39,14 +39,16 @@ export const login = async (req, res) => {
   const queryResult = await pool.query(textQuery, [email]);
 
   if (queryResult.rowCount === 0) {
-    throw new UnauthorizedError("Email is not registered");
+    throw new UnauthorizedError("Email Belum Terdaftar!");
   }
 
   const user = queryResult.rows[0];
   const isPasswordMatch = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatch) {
-    throw new UnauthorizedError("Incorrect password");
+    throw new UnauthorizedError(
+      "Password yang Anda Masukan Salah. Silakan Coba Lagi!"
+    );
   }
 
   const token = jwt.sign(
@@ -58,4 +60,26 @@ export const login = async (req, res) => {
   );
 
   return res.status(200).json({ success: true, token });
+};
+
+export const getRoleUserInSidang = async (idSidang, email) => {
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryGetRoleUserInSidang = `
+  SELECT
+      pms.role
+  FROM
+      PenggunaMengikutiSidang pms
+  WHERE
+      idSidang = $1 AND email = $2
+  `;
+
+  const valuesGetRoleUserInSidang = [idSidangInt, email];
+
+  const queryResult = await pool.query(
+    textQueryGetRoleUserInSidang,
+    valuesGetRoleUserInSidang
+  );
+
+  return queryResult.rows[0]?.role || null;
 };
