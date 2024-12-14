@@ -18,7 +18,7 @@ export const register = async (req, res) => {
   const values = [email, nama, hashedPassword, role];
   await pool.query(textQuery, values);
 
-  if (npm != null) {
+  if (npm) {
     const textQuery = `INSERT INTO Mahasiswa (email, npm) VALUES ($1, $2)`;
     const values = [email, npm];
     await pool.query(textQuery, values);
@@ -60,4 +60,26 @@ export const login = async (req, res) => {
   );
 
   return res.status(200).json({ success: true, token });
+};
+
+export const getRoleUserInSidang = async (idSidang, email) => {
+  const idSidangInt = parseInt(idSidang);
+
+  const textQueryGetRoleUserInSidang = `
+  SELECT
+      pms.role
+  FROM
+      PenggunaMengikutiSidang pms
+  WHERE
+      idSidang = $1 AND email = $2
+  `;
+
+  const valuesGetRoleUserInSidang = [idSidangInt, email];
+
+  const queryResult = await pool.query(
+    textQueryGetRoleUserInSidang,
+    valuesGetRoleUserInSidang
+  );
+
+  return queryResult.rows[0]?.role || null;
 };

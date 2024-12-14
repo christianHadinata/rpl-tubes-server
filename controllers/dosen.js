@@ -1,4 +1,6 @@
 import pool from "../db/db.js";
+import { InternalServerError } from "../errors/InternalServerError.js";
+import { BadRequestError } from "../errors/BadRequestError.js";
 
 export const getAllDosen = async (req, res) => {
   const textQuery = `SELECT 
@@ -17,15 +19,15 @@ export const getAllDosen = async (req, res) => {
 export const createNilai = async (req, res) => {
   const { idSidang, roleDosen, arrKomponenDanNilai } = req.body;
 
-  console.log("idSidang: " + idSidang);
-  console.log("roleDosen: " + roleDosen);
-  console.log("arrKomponenDanNilai: " + arrKomponenDanNilai);
-
-  const idSidangInt = parseInt(idSidang);
-
   const client = await pool.connect();
 
   try {
+    if (!idSidang || !roleDosen || !arrKomponenDanNilai) {
+      throw new BadRequestError("All specified field must be included");
+    }
+
+    const idSidangInt = parseInt(idSidang);
+
     await client.query("BEGIN");
 
     let nilaiKaliBobot = 0;
@@ -84,63 +86,6 @@ export const createNilai = async (req, res) => {
 
       nilaiKaliBobot += currNilaiKaliBobot;
     }
-
-    // await Promise.all(
-    //   arrKomponenDanNilai.map(async (komponenDanNilai) => {
-    //     // insert atau update tabel Nilai
-    //     const textQueryAddNilai = `
-    //   INSERT INTO
-    //       Nilai(idKomponen, idSidang, nilaiDiberi)
-    //   VALUES
-    //       ($1, $2, $3)
-    //   ON CONFLICT
-    //       (idKomponen, idSidang)
-    //   DO
-    //       UPDATE SET nilaiDiberi = $4
-    //   WHERE
-    //       Nilai.idKomponen = $5 AND Nilai.idSidang = $6
-    //   `;
-
-    //     const valuesAddNilai = [
-    //       komponenDanNilai.idKomponen,
-    //       idSidangInt,
-    //       komponenDanNilai.nilai,
-    //       komponenDanNilai.nilai,
-    //       komponenDanNilai.idKomponen,
-    //       idSidangInt,
-    //     ];
-
-    //     await client.query(textQueryAddNilai, valuesAddNilai);
-
-    //     // terus hitung nilai kali bobotKomponen
-    //     const textQueryGetNilai = `
-    //   SELECT
-    //       SUM(Nilai.nilaiDiberi * KomponenNilai.bobot) AS "totalNilai"
-    //   FROM
-    //       Nilai
-    //   INNER JOIN
-    //       KomponenNilai
-    //   ON
-    //       Nilai.idKomponen = KomponenNilai.idKomponen
-    //   WHERE
-    //       Nilai.idKomponen = $1 AND Nilai.idSidang = $2;
-    //   `;
-
-    //     const valuesGetNilai = [komponenDanNilai.idKomponen, idSidangInt];
-    //     console.log("idKomponen: " + komponenDanNilai.idKomponen);
-
-    //     const queryResultGetNilai = await client.query(
-    //       textQueryGetNilai,
-    //       valuesGetNilai
-    //     );
-
-    //     const currNilaiKaliBobot = queryResultGetNilai.rows[0].totalNilai;
-
-    //     console.log("currNilai: " + currNilaiKaliBobot);
-
-    //     nilaiKaliBobot += currNilaiKaliBobot;
-    //   })
-    // );
 
     console.log(nilaiKaliBobot);
 
@@ -222,7 +167,14 @@ export const createNilai = async (req, res) => {
     console.log(error);
     await client.query("ROLLBACK");
 
-    throw new InternalServerError("An unexpected error occurred");
+    if (error instanceof BadRequestError) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error instanceof InternalServerError) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(500).json({ error: error.message });
   } finally {
     client.release();
   }
