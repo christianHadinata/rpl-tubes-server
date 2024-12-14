@@ -25,10 +25,15 @@ export const createDataSidang = async (req, res) => {
     TA,
     tahunAjaran,
     emailPembimbingUtama,
-    emailPembimbingPendamping,
     emailPengujiUtama,
     emailPengujiPendamping,
   } = req.body;
+
+  let { emailPembimbingPendamping } = req.body;
+
+  if (emailPembimbingPendamping === "") {
+    emailPembimbingPendamping = "-";
+  }
 
   const client = await pool.connect();
 
@@ -182,15 +187,21 @@ export const createKomponenDanBobot = async (req, res) => {
 
     // update dulu persentase di tabel PersentaseNilai
     const textQueryPersentase = `
-    UPDATE
-      PersentaseNilai pn
-    SET
-      persentase = $1
-    WHERE
-      pn.role = $2
+    INSERT INTO
+        PersentaseNilai(role, persentase)
+    VALUES
+        ($1, $2)
+    ON CONFLICT
+        (role)
+    DO
+      UPDATE
+      SET
+        persentase = $2
+      WHERE
+        PersentaseNilai.role = $1
     `;
 
-    const valuesPersentase = [persentaseNilai, selectedRole];
+    const valuesPersentase = [selectedRole, persentaseNilai];
 
     await client.query(textQueryPersentase, valuesPersentase);
 
