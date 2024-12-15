@@ -1,5 +1,6 @@
 import pool from "../db/db.js";
 import { InternalServerError } from "../errors/InternalServerError.js";
+import { BadRequestError } from "../errors/BadRequestError.js";
 
 export const getAllMahasiswa = async (req, res) => {
   const textQuery = `SELECT 
@@ -38,6 +39,18 @@ export const createDataSidang = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    if (
+      !emailMahasiswa ||
+      !judulSkripsi ||
+      !TA ||
+      !tahunAjaran ||
+      !emailPembimbingUtama ||
+      !emailPengujiUtama ||
+      !emailPengujiPendamping
+    ) {
+      throw new BadRequestError("All specified field must be included");
+    }
+
     await client.query("BEGIN");
 
     // buat sidang ke database
@@ -135,7 +148,14 @@ export const createDataSidang = async (req, res) => {
     console.log(error);
     await client.query("ROLLBACK");
 
-    throw new InternalServerError("An unexpected error occurred");
+    if (error instanceof BadRequestError) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error instanceof InternalServerError) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(500).json({ error: error.message });
   } finally {
     client.release();
   }
